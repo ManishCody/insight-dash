@@ -1,4 +1,5 @@
 import { Phone, CheckCircle, TrendingUp, Users, MessageSquare, Target } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import Header from '@/components/dashboard/Header';
 import StatCard from '@/components/dashboard/StatCard';
 import DoughnutChart from '@/components/dashboard/DoughnutChart';
@@ -15,15 +16,63 @@ import {
   getAwarenessDistribution,
   getSchemeLevelDistribution,
   getDailyCallVolume,
+  getAvailableDates,
+  getCallsByDate,
+  callData,
 } from '@/data/callData';
 
 const Index = () => {
-  const callStatusData = getCallStatusDistribution();
-  const sentimentData = getSentimentDistribution();
-  const interestData = getInterestFlagDistribution();
-  const awarenessData = getAwarenessDistribution();
-  const schemeLevelData = getSchemeLevelDistribution();
-  const dailyVolume = getDailyCallVolume();
+  const dates = getAvailableDates();
+  const [selectedDate, setSelectedDate] = useState<string>('All days');
+  const calls = useMemo(() => {
+    if (selectedDate === 'All days') {
+      return Object.values(callData).flat();
+    }
+    return getCallsByDate(selectedDate);
+  }, [selectedDate]);
+
+  const callStatusData = getCallStatusDistribution(calls);
+  const sentimentData = getSentimentDistribution(calls);
+  const interestData = getInterestFlagDistribution(calls);
+  const awarenessData = getAwarenessDistribution(calls);
+  const schemeLevelData = getSchemeLevelDistribution(calls);
+  const dailyVolume = getDailyCallVolume(calls);
+
+  const dateLabel = useMemo(() => {
+    if (selectedDate === 'All days') return 'All days';
+    if (!calls || !calls.length) return selectedDate;
+    const raw: string = calls[0]?.call_date || '';
+    const datePart = raw.split(' ')[0] || '';
+    const parts = datePart.split(/[\/\-]/);
+    if (parts.length >= 3) {
+      const m = Number(parts[0]);
+      const d = Number(parts[1]);
+      const yy = Number(parts[2]);
+      if (!Number.isNaN(m) && !Number.isNaN(d) && !Number.isNaN(yy)) {
+        const year = yy < 100 ? 2000 + yy : yy;
+        const dt = new Date(year, m - 1, d);
+        if (!isNaN(dt.getTime())) {
+          return dt.toLocaleDateString('en-IN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+        }
+      }
+    }
+    return selectedDate;
+  }, [calls, selectedDate]);
+
+  const avgInteractions = useMemo(() => {
+    const completed = (calls || []).filter((c: any) => c.call_status === 'completed');
+    if (!completed.length) return (0).toFixed(1);
+    const total = completed.reduce((sum: number, c: any) => {
+      const val = Number(c.interaction_count ?? c.interaction_count_total);
+      return sum + (Number.isFinite(val) ? val : 0);
+    }, 0);
+    return (total / completed.length).toFixed(1);
+  }, [calls]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,7 +80,7 @@ const Index = () => {
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none" />
       
       <div className="relative container mx-auto px-4 py-8 max-w-7xl">
-        <Header />
+        <Header dates={dates} selectedDate={selectedDate} onDateChange={setSelectedDate} dateLabel={dateLabel} />
 
         {/* Key Metrics */}
         <section className="mb-8">
@@ -39,7 +88,7 @@ const Index = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Total Calls"
-              value={getTotalCalls()}
+              value={getTotalCalls(calls)}
               subtitle="All call attempts"
               icon={Phone}
               trend={{ value: 12.5, isPositive: true }}
@@ -47,7 +96,7 @@ const Index = () => {
             />
             <StatCard
               title="Completed Calls"
-              value={getCompletedCalls()}
+              value={getCompletedCalls(calls)}
               subtitle="Successfully connected"
               icon={CheckCircle}
               trend={{ value: 8.3, isPositive: true }}
@@ -55,7 +104,7 @@ const Index = () => {
             />
             <StatCard
               title="Conversion Rate"
-              value={`${getConversionRate()}%`}
+              value={`${getConversionRate(calls)}%`}
               subtitle="Interest shown"
               icon={TrendingUp}
               trend={{ value: 5.2, isPositive: true }}
@@ -63,7 +112,7 @@ const Index = () => {
             />
             <StatCard
               title="Avg Interactions"
-              value={getAverageInteractions()}
+              value={avgInteractions}
               subtitle="Per completed call"
               icon={MessageSquare}
               colorClass="text-warning"
@@ -79,6 +128,7 @@ const Index = () => {
               title="Daily Call Volume Trend"
               labels={dailyVolume.map(([date]) => date)}
               data={dailyVolume.map(([, count]) => count)}
+              yUnitSuffix=" min"
             />
             <BarChart
               title="Call Status Distribution"
@@ -128,14 +178,14 @@ const Index = () => {
                     <Target className="w-5 h-5 text-primary" />
                     <span className="text-foreground">Target Audience Reached</span>
                   </div>
-                  <span className="mono text-primary font-semibold">{getTotalCalls()}</span>
+                  <span className="mono text-primary font-semibold">{getTotalCalls(calls)}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-border/30">
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-success" />
                     <span className="text-foreground">Qualified Leads</span>
                   </div>
-                  <span className="mono text-success font-semibold">{getCompletedCalls()}</span>
+                  <span className="mono text-success font-semibold">{getCompletedCalls(calls)}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-border/30">
                   <div className="flex items-center gap-3">

@@ -1,6 +1,16 @@
 import { Phone, RefreshCw, Calendar } from 'lucide-react';
 
-const Header = () => {
+
+
+
+interface HeaderProps {
+  dates: string[];
+  selectedDate: string;
+  onDateChange: (date: string) => void;
+  dateLabel?: string;
+}
+
+const Header = ({ dates, selectedDate, onDateChange, dateLabel }: HeaderProps) => {
   const currentDate = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
@@ -23,12 +33,31 @@ const Header = () => {
             <p className="text-muted-foreground text-sm mt-1">Tranche 1 - Call Summary Dashboard</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 text-muted-foreground text-sm">
-            <Calendar className="w-4 h-4" />
-            <span>{currentDate}</span>
+          <div className="relative">
+            <select
+              className="px-5 py-2 rounded-xl text-sm font-semibold text-[#0A3146]
+               bg-[#D2F3FF] border border-[#77D7FF]
+               shadow-sm focus:outline-none cursor-pointer
+               transition-all hover:bg-[#c8ecff] appearance-none"
+              value={selectedDate}
+              onChange={(e) => onDateChange(e.target.value)}
+            >
+              <option value="All days" className="bg-[#0B182B]  text-white">All days</option>
+              {dates.map((d) => (
+                <option key={d} value={d} className="bg-[#0B182B] text-white">
+                  {d}
+                </option>
+              ))}
+            </select>
+
+            {/* Dropdown arrow icon */}
+            <span className="pointer-events-none absolute right-2 pl-2 top-2.5 text-[#0A3146] text-xs">
+              ▼
+            </span>
           </div>
+
         </div>
       </div>
     </header>

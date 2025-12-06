@@ -4,22 +4,10 @@ interface LineChartProps {
   title: string;
   labels: string[];
   data: any[];
+  yUnitSuffix?: string;
 }
 
-const LineChart = ({ title, labels, data }: LineChartProps) => {
-  const movingAverage = (arr: number[], windowSize: number) => {
-    const result: number[] = [];
-    let sum = 0;
-    for (let i = 0; i < arr.length; i++) {
-      sum += arr[i];
-      if (i >= windowSize) sum -= arr[i - windowSize];
-      const denom = Math.min(i + 1, windowSize);
-      result.push(Number((sum / denom).toFixed(2)));
-    }
-    return result;
-  };
-
-  const ma7 = movingAverage(data, 7);
+const LineChart = ({ title, labels, data, yUnitSuffix = '' }: LineChartProps) => {
 
   const option = {
     _computed: undefined as unknown,
@@ -33,6 +21,7 @@ const LineChart = ({ title, labels, data }: LineChartProps) => {
       formatter: (params: any) => {
         const label = params?.[0]?.axisValueLabel ?? '';
         const items = params
+          .filter((p: any) => !String(p.seriesName).toLowerCase().includes('moving avg'))
           .map((p: any) => `${p.marker}${p.seriesName}: <b>${p.value}</b>`)
           .join('<br/>');
         return `${label}<br/>${items}`;
@@ -43,7 +32,6 @@ const LineChart = ({ title, labels, data }: LineChartProps) => {
       textStyle: { color: 'hsl(215, 20%, 65%)', fontFamily: 'Inter' },
       data: [
         { name: 'Call Volume', icon: 'circle' },
-        { name: '7-day Moving Avg', icon: 'circle' },
       ],
     },
     dataZoom: [
@@ -80,7 +68,12 @@ const LineChart = ({ title, labels, data }: LineChartProps) => {
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: 'hsl(215, 20%, 65%)', fontFamily: 'JetBrains Mono', fontSize: 11 },
+      axisLabel: {
+        color: 'hsl(215, 20%, 65%)',
+        fontFamily: 'JetBrains Mono',
+        fontSize: 11,
+        formatter: (val: number) => `${val}${yUnitSuffix}`,
+      },
       splitLine: { lineStyle: { color: 'hsl(217, 33%, 15%)' } },
     },
     series: [
@@ -95,14 +88,6 @@ const LineChart = ({ title, labels, data }: LineChartProps) => {
         areaStyle: { color: 'hsla(199, 89%, 48%, 0.1)' },
         emphasis: { focus: 'series' },
         data,
-      },
-      {
-        name: '7-day Moving Avg',
-        type: 'line',
-        smooth: true,
-        symbol: 'none',
-        lineStyle: { color: 'hsl(168, 84%, 40%)', width: 2, type: 'dashed' },
-        data: ma7,
       },
     ],
   } as const;
