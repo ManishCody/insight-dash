@@ -182,12 +182,18 @@ const Index = () => {
               title="Daily Call Volume Trend"
               labels={dailyVolume.map(([date]) => date)}
               data={dailyVolume.map(([, count]) => count)}
-              yUnitSuffix=" min"
+              yUnitSuffix=""
+              description={
+                <>This line shows the total calls made each day. Peaks indicate busier days. Use the slider below the chart to focus on a smaller date range.</>
+              }
             />
             <BarChart
               title="Call Status Distribution"
               labels={Object.keys(callStatusData)}
               data={Object.values(callStatusData)}
+              description={
+                <>Each bar compares how many calls fall into a status (for example, completed or not connected). Taller bars mean more calls in that status.</>
+              }
             />
           </div>
         </section>
@@ -200,16 +206,25 @@ const Index = () => {
               title="Sentiment Analysis"
               data={sentimentData}
               colors={['hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)']}
+              description={
+                <>Shows the share of conversations with positive, neutral, or negative tone. A larger green portion suggests friendlier conversations.</>
+              }
             />
             <DoughnutChart
               title="Interest in Loan"
               data={interestData}
               colors={['hsl(168, 84%, 40%)', 'hsl(217, 33%, 40%)']}
+              description={
+                <>Represents the percentage of people who showed interest in taking a loan versus those who did not. More green is better.</>
+              }
             />
             <DoughnutChart
               title="Scheme Awareness"
               data={awarenessData}
               colors={['hsl(199, 89%, 48%)', 'hsl(262, 83%, 58%)']}
+              description={
+                <>Breaks down how many people already knew about the scheme compared to those who were not aware. This helps target awareness efforts.</>
+              }
             />
           </div>
         </section>
@@ -223,6 +238,9 @@ const Index = () => {
               labels={Object.keys(schemeLevelData)}
               data={Object.values(schemeLevelData)}
               color="hsl(262, 83%, 58%)"
+              description={
+                <>Compares users by their scheme level or eligibility bucket. Taller bars show where most users currently are.</>
+              }
             />
             <div className="chart-container animate-fade-in">
               <h3 className="text-lg font-semibold text-foreground mb-4">Campaign Summary</h3>

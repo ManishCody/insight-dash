@@ -23,9 +23,10 @@ interface BarChartProps {
   labels: string[];
   data: number[];
   color?: string;
+  description?: React.ReactNode;
 }
 
-const BarChart = ({ title, labels, data, color = 'hsl(199, 89%, 48%)' }: BarChartProps) => {
+const BarChart = ({ title, labels, data, color = 'hsl(199, 89%, 48%)', description }: BarChartProps) => {
   const chartData = {
     labels,
     datasets: [
@@ -98,6 +99,9 @@ const BarChart = ({ title, labels, data, color = 'hsl(199, 89%, 48%)' }: BarChar
       <div className="h-64">
         <Bar data={chartData} options={options} />
       </div>
+      {description ? (
+        <p className="mt-3 text-xs text-muted-foreground leading-relaxed">{description}</p>
+      ) : null}
     </div>
   );
 };

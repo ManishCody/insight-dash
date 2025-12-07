@@ -5,9 +5,10 @@ interface LineChartProps {
   labels: string[];
   data: any[];
   yUnitSuffix?: string;
+  description?: React.ReactNode;
 }
 
-const LineChart = ({ title, labels, data, yUnitSuffix = '' }: LineChartProps) => {
+const LineChart = ({ title, labels, data, yUnitSuffix = '', description }: LineChartProps) => {
 
   const option = {
     _computed: undefined as unknown,
@@ -98,6 +99,9 @@ const LineChart = ({ title, labels, data, yUnitSuffix = '' }: LineChartProps) =>
       <div className="h-64">
         <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />
       </div>
+      {description ? (
+        <p className="mt-3 text-xs text-muted-foreground leading-relaxed">{description}</p>
+      ) : null}
     </div>
   );
 };

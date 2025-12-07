@@ -12,9 +12,10 @@ interface DoughnutChartProps {
   title: string;
   data: Record<string, number>;
   colors?: string[];
+  description?: React.ReactNode;
 }
 
-const DoughnutChart = ({ title, data, colors }: DoughnutChartProps) => {
+const DoughnutChart = ({ title, data, colors, description }: DoughnutChartProps) => {
   const defaultColors = [
     'hsl(199, 89%, 48%)',
     'hsl(168, 84%, 40%)',
@@ -82,6 +83,9 @@ const DoughnutChart = ({ title, data, colors }: DoughnutChartProps) => {
       <div className="h-64">
         <Doughnut data={chartData} options={options} />
       </div>
+      {description ? (
+        <p className="mt-3 text-xs text-muted-foreground leading-relaxed">{description}</p>
+      ) : null}
     </div>
   );
 };
