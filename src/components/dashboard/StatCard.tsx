@@ -32,7 +32,6 @@ const StatCard = ({ title, value, subtitle, icon: Icon, trend, colorClass = 'tex
           <span className={`text-sm font-medium ${trend.isPositive ? 'text-success' : 'text-destructive'}`}>
             {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
           </span>
-          <span className="text-xs text-muted-foreground">vs last period</span>
         </div>
       )}
     </div>

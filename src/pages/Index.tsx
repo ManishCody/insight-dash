@@ -74,6 +74,59 @@ const Index = () => {
     return (total / completed.length).toFixed(1);
   }, [calls]);
 
+  // Compute previous date and dynamic trends
+  const previousDate = useMemo(() => {
+    if (selectedDate === 'All days') return undefined;
+    const idx = dates.indexOf(selectedDate);
+    if (idx > 0) return dates[idx - 1];
+    return undefined;
+  }, [dates, selectedDate]);
+
+  const previousCalls = useMemo(() => {
+    return previousDate ? getCallsByDate(previousDate) : [];
+  }, [previousDate]);
+
+  const makeTrend = (current: number, previous: number) => {
+    if (!(previous > 0)) return undefined;
+    const changePct = ((current - previous) / previous) * 100;
+    return {
+      value: Number(Math.abs(changePct).toFixed(1)),
+      isPositive: current >= previous,
+    } as { value: number; isPositive: boolean };
+  };
+
+  const totalCallsTrend = useMemo(() => {
+    const curr = getTotalCalls(calls);
+    const prev = getTotalCalls(previousCalls);
+    return makeTrend(curr, prev);
+  }, [calls, previousCalls]);
+
+  const completedCallsTrend = useMemo(() => {
+    const curr = getCompletedCalls(calls);
+    const prev = getCompletedCalls(previousCalls);
+    return makeTrend(curr, prev);
+  }, [calls, previousCalls]);
+
+  const conversionRateTrend = useMemo(() => {
+    const curr = Number(getConversionRate(calls));
+    const prev = Number(getConversionRate(previousCalls));
+    return makeTrend(curr, prev);
+  }, [calls, previousCalls]);
+
+  const avgInteractionsTrend = useMemo(() => {
+    const curr = Number(avgInteractions);
+    const prevCompleted = (previousCalls || []).filter((c: any) => c.call_status === 'completed');
+    let prevAvg = 0;
+    if (prevCompleted.length) {
+      const total = prevCompleted.reduce((sum: number, c: any) => {
+        const val = Number(c.interaction_count ?? c.interaction_count_total);
+        return sum + (Number.isFinite(val) ? val : 0);
+      }, 0);
+      prevAvg = Number((total / prevCompleted.length).toFixed(1));
+    }
+    return makeTrend(curr, prevAvg);
+  }, [avgInteractions, previousCalls]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Background gradient effect */}
@@ -91,7 +144,7 @@ const Index = () => {
               value={getTotalCalls(calls)}
               subtitle="All call attempts"
               icon={Phone}
-              trend={{ value: 12.5, isPositive: true }}
+              trend={totalCallsTrend}
               colorClass="text-primary"
             />
             <StatCard
@@ -99,7 +152,7 @@ const Index = () => {
               value={getCompletedCalls(calls)}
               subtitle="Successfully connected"
               icon={CheckCircle}
-              trend={{ value: 8.3, isPositive: true }}
+              trend={completedCallsTrend}
               colorClass="text-success"
             />
             <StatCard
@@ -107,7 +160,7 @@ const Index = () => {
               value={`${getConversionRate(calls)}%`}
               subtitle="Interest shown"
               icon={TrendingUp}
-              trend={{ value: 5.2, isPositive: true }}
+              trend={conversionRateTrend}
               colorClass="text-accent"
             />
             <StatCard
@@ -115,6 +168,7 @@ const Index = () => {
               value={avgInteractions}
               subtitle="Per completed call"
               icon={MessageSquare}
+              trend={avgInteractionsTrend}
               colorClass="text-warning"
             />
           </div>
@@ -207,6 +261,20 @@ const Index = () => {
           </div>
         </section>
       </div>
+    <section className="relative container mx-auto px-4 py-8 max-w-7xl">
+      <details className="glass-card p-4 rounded-lg">
+        <summary className="cursor-pointer text-sm font-semibold text-foreground">About this dashboard (data & formulae)</summary>
+        <div className="mt-3 text-sm text-muted-foreground space-y-2">
+          <p><strong>Data source</strong>: Loaded from day files (2nd–5th Dec). Some fields can be empty; such records are excluded in some charts.</p>
+          <p><strong>Previous period</strong>: For a selected date, the previous period is the immediately earlier date in the dropdown. If none exists or previous value is 0, the trend is hidden.</p>
+          <p><strong>Total Calls</strong>: Count of all calls in the selected period.</p>
+          <p><strong>Completed Calls</strong>: Count of calls with status = completed.</p>
+          <p><strong>Conversion Rate</strong>: Interested completed ÷ all completed × 100.</p>
+          <p><strong>Avg Interactions</strong>: Sum of interaction counts for completed ÷ number of completed.</p>
+          <p><strong>Trend %</strong>: ((current − previous) ÷ previous) × 100. Up if current ≥ previous; down otherwise.</p>
+        </div>
+      </details>
+    </section>
     </div>
   );
 };
